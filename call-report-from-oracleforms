@@ -1,0 +1,61 @@
+# calling report form oracle forms 6i 
+
+DECLARE
+   p_list       paramlist;
+   vvalidate    VARCHAR2 (5);
+   vfigure      NUMBER;
+   isexists     NUMBER;
+   reportname   VARCHAR2 (50)  := 'dir_share_holding_position';
+   rptpath      VARCHAR2 (200);
+BEGIN
+   rptpath := 'C:\Share\Reports\';
+   -- rptpath := :global.drive_name||'\PBLIBS\Security_Document\REPORTS\';
+   vfigure := 100000;
+   p_list := GET_PARAMETER_LIST ('tmpdata');
+
+   IF NOT ID_NULL (p_list)
+   THEN
+      DESTROY_PARAMETER_LIST (p_list);
+   END IF;
+
+   p_list := CREATE_PARAMETER_LIST ('tmpdata');
+   --ADD_PARAMETER (p_list, 'P_USERID', text_parameter, (:parameter.p_userid));
+   ADD_PARAMETER (p_list, 'PARAMFORM', text_parameter, 'no');
+   ADD_PARAMETER (p_list, 'MAXIMIZE', text_parameter, 'YES');
+   ADD_PARAMETER (p_list, 'ORACLE_SHUTDOWN', text_parameter, 'YES');
+   ADD_PARAMETER (p_list, 'P_refdate', text_parameter, :sharereport.asondate);
+
+   -- ADD_PARAMETER (p_list,  'p_YEAR',text_parameter,TO_NUMBER(TO_CHAR(:SHAREREPORT.ASONDATE,'YYYY')));
+   IF :sharereport.dir_report = 1
+   THEN
+      reportname := 'dir_share_holding_position';
+   ELSIF :sharereport.dir_report = 2
+   THEN
+      reportname := 'monthly_share_statement';
+   ELSIF :sharereport.dir_report = 3
+   THEN
+      reportname := 'dir_share_position_to_dse';
+   ELSIF :sharereport.dir_report = 4
+   THEN
+      reportname := 'dir_share_position_to_cse';
+   ELSIF :sharereport.dir_report = 5
+   THEN
+      reportname := 'free_float_share_statement';
+   ELSIF :sharereport.dir_report = 6
+   THEN
+      reportname := 'dir_share_position_to_sec';
+   ELSIF :sharereport.dir_report = 7
+   THEN
+      reportname := 'DIR_SHARE_WITHOUTBOFOLIO';
+   END IF;
+
+   --    RUN_PRODUCT(Reports,:global.drive_name||'\PMS_HO\CREDIT_MIS\Reports\adv_classified_ep.rep', synchronous, runtime, filesystem, 'P','');
+   RUN_PRODUCT (reports,
+                rptpath || reportname || '.REP',
+                asynchronous,
+                runtime,
+                filesystem,
+                p_list,
+                NULL
+               );
+END;
